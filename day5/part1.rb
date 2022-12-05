@@ -1,17 +1,13 @@
 #!/usr/bin/env ruby
 
 def parse_stacks(stack_str)
-  stack_str = stack_str[0...-1].reverse
-  num_stacks = stack_str[0].split(" ").size
-  stacks = num_stacks.times.map { [] }
-
-  stack_str[1..-1].each do |stack_line|
-    (0...num_stacks).each do |stack_idx|
-      to_push = stack_line[(stack_idx * 4) + 1]
-      stacks[stack_idx].push(to_push) if to_push != ' '
+  stacks = Hash.new {|h, k| h[k] = []}
+  stack_str.reverse[2..-1].each do |stack_line|
+    stack_line.chars.each_slice(4).map {|a| a[1]}.each_with_index do |sym, idx|
+      stacks[idx].push(sym) if sym != ' '
     end
   end
-  stacks
+  (0..stacks.keys.max).map {|idx| stacks[idx]}
 end
 
 def parse_instruction(instruction_str)
