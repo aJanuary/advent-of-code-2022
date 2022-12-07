@@ -39,47 +39,32 @@ protected
   attr_writer :size
 end
 
-def parse_directory_tree(command_output)
+def parse_commands_output(command_output)
   # This algorithm assumes we will always ls the parent directory before cding
   # into it
   root = Node.dir('/')
   stack = []
-  in_ls = false
 
   command_output.each_line.each do |line|
     parts = line.split(' ')
-    if parts[0] == '$'
-      if parts[1] == 'cd'
-        if parts[2] == '..'
-          stack.pop()
-        elsif parts[2] == '/'
-          stack = [root]
-        else
-          dir = stack[-1].children[parts[2]]
-          stack << dir
-        end
-      elsif parts[1] == 'ls'
-        in_ls = true
-      else
-        raise "unknown command #{parts[1]}"
-      end
-    else
-      raise "unexpected command output" if !in_ls
-
-      name = parts[1]
-      if parts[0] == 'dir'
+    case parts
+      in ['$', 'cd', '..']
+        stack.pop()
+      in ['$', 'cd', '/']
+        stack = [root]
+      in ['$', 'cd', name]
+        stack << stack.last.children[name]
+      in ['dir', name]
         stack[-1].add_child(Node.dir(name))
-      else
-        size = parts[0].to_i
-        stack[-1].add_child(Node.file(name, size))
-      end
+      in [size_str, name]
+        stack[-1].add_child(Node.file(name, size_str.to_i))
     end
   end
 
   root
 end
 
-tree = parse_directory_tree(ARGF.read)
+tree = parse_commands_output(ARGF.read)
 
 small_dirs = tree.filter {|item| item.type == :dir and item.size <= 100000}
 puts small_dirs.map {|dir| dir.size}.sum
