@@ -52,15 +52,13 @@ monkies = parse_monkies(ARGF)
 
 inspection_count = monkies.map { 0 }
 
-# TODO: The numbers get real big real fast, which makes it real slow.
-#       Need to find a way to limit the size of the numbers.
-#       I _think_ dividing by the product of all the div_tests would work?
+gcd = monkies.map(&:div_test).inject(:*)
 10000.times do |i|
   monkies.each do |monkey|
     monkey.items.each do |worry_level|
       worry_level = monkey.operation.evaluate(worry_level)
       throw_to_idx = worry_level % monkey.div_test == 0 ? monkey.true_branch : monkey.false_branch
-      monkies[throw_to_idx].items << worry_level
+      monkies[throw_to_idx].items << worry_level % gcd
     end
     inspection_count[monkey.idx] += monkey.items.size
     monkey.items = []
