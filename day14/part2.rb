@@ -8,8 +8,19 @@ Coordinate = Struct.new(:x, :y) do
   end
 end
 
+class Map
+  def initialize(points)
+    @points = Set.new(points)
+    @floor_y = points.max_by(&:y).y + 2
+  end
+
+  def include?(point)
+    point.y == @floor_y || @points.include?(point)
+  end
+end
+
 def parse_scan(stream)
-  Set.new(stream.each_line.map(&:chomp).flat_map do |line|
+  Map.new(stream.each_line.map(&:chomp).flat_map do |line|
     pairs = line.split(' -> ').map do |coords|
       Coordinate.new(*coords.split(',').map(&:to_i))
     end
@@ -32,9 +43,6 @@ def parse_scan(stream)
 end
 
 def add_sand(map, sand, sand_coord)
-  # Hit the floor
-  return sand_coord if sand_coord.y == map.max_by(&:y).y + 1
-
   [
     Coordinate.new(0, 1),
     Coordinate.new(-1, 1),
